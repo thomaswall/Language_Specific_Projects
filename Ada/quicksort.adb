@@ -61,13 +61,13 @@ procedure Sorting(X: in out The_Array;First,Second: in Integer) is
 			i:=L;
 			j:=U;
 
-			while i < j loop
-				if i-j=1 then
+			if i-j=1 then
 					M := X(i);
 				else
 					M := Median(X(i),X(j),X((i+j)/2));
 				end if;
 
+			while i < j loop
 				while X(i) < M loop
 					i:= i+1;
 				end loop;
