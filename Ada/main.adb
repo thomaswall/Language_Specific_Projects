@@ -25,19 +25,19 @@ procedure Main is
 			New_line;
 			Put("Unsorted: ");
 			for i in 1..30 loop
-				Put(X(i));
+				Put(X(i)); -- print unsorted array
 			end loop;
 
-			sorter.unsorted;
+			sorter.unsorted; -- call to sort array
 
-			accept sorted;
+			accept sorted; -- wait for sorted array
 			New_line;
 			Put("Sorted: ");
 			for i in 1..30 loop
-				Put(X(i));
+				Put(X(i)); -- print unsorted array
 			end loop;
 
-			accept added(sum: in integer) do
+			accept added(sum: in integer) do -- wait for sum then print
 			New_line;
 			Put("Sum:");
 			Put(sum);
@@ -47,20 +47,20 @@ procedure Main is
 
 		task body sorter is
 		begin
-			accept unsorted;
-			Quicksort.Sorting(X,1,30);
-			adder.sorted;
-			Printer.sorted;
+			accept unsorted; -- start sorting
+			Quicksort.Sorting(X,1,30); -- begin quicksorting with array
+			adder.sorted; -- call to adder to add numbers in array
+			Printer.sorted; -- call to printer to print sorted array
 		end;
 
 		task body adder is
 		sum: Integer:= 0;
 		begin
-			accept sorted;
+			accept sorted; -- wait for sorting to finish then add
 			for i in 1..30 loop
 				sum:=sum+X(i);
 			end loop;
-			Printer.added(sum);
+			Printer.added(sum); -- give printer sum value
 		end;
 	begin
 		null;
@@ -70,7 +70,5 @@ begin
 	for i in 1..30 loop
 		Get(X(i));
 	end loop;
-	Start(X);
-
-
+	Start(X); -- put all procedures in function to avoid rendezvous
 end Main;
