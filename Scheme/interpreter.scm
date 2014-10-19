@@ -52,7 +52,9 @@
 	((eq? (car exp) 'define)
 	 (if
 	  (pair? (cadr exp))
-	  (display "cant do functions yet bozo")  
+	  (begin 
+	  	(insert! (list (caadr exp) (my-eval (list 'lambda (cdr (cadr exp)) (caddr exp)) *global-env*)) *global-env*)
+	  	(caadr exp))
 	  (begin
 	  	(insert! (list (cadr exp) (my-eval (caddr exp) *global-env*)) *global-env*)
 	  	(cadr exp))
@@ -73,6 +75,22 @@
       (my-eval then-exp env)
       (my-eval else-exp env)))
 
+(define (len L) ;; compute length of list
+  (cond ((null? L) 0)
+        (else (+ 1 (len (cdr L))))))
+
+(define (cond_recurse exp) ;; recurse through all conditionals until hit true or last
+	(if (eq? (len exp) '2) 
+		(if (top-eval (car (car exp)))
+			(top-eval (cadr (car exp)))
+			(top-eval (cadr (cadr exp)))
+		)
+		(if (top-eval (car (car exp)))
+			(top-eval (cadr (car exp)))
+			(cond_recurse (cdr exp))
+		)
+	)
+)
 
 ;; still missing let, let*, letrec, the syntax for (define (f x) ...),
 ;; cond, begin (block).
@@ -84,6 +102,7 @@
    ((eq? (car exp) 'quote) (cadr exp))
    ((eq? (car exp) 'if)
     (handle-if (cadr exp) (caddr exp) (cadddr exp) env))
+   ((eq? (car exp) 'cond) (cond_recurse (cdr exp)))
    ((eq? (car exp) 'lambda)
     (list 'closure exp env))
    ((eq? (car exp) 'letrec)
