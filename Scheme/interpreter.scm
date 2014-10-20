@@ -165,9 +165,40 @@
 ; 5) evaluate the body of the letrec using new-env
 
 
+;;(
+
+(define (uninit defs orig)
+	(if(null? (cdr defs))
+		(cons (list (car (car defs)) '*uninitialized*) orig)
+		(uninit (cdr defs) (cons (list (car (car defs)) '*uninitialized*) orig))
+	)
+)
+
+(define (change-env! defs env)
+	(if(null? (cdr defs))
+		(value_changer! (car (car defs)) (my-eval (cadr (car defs)) env) env)
+		(begin 
+			(value_changer! (car (car defs)) (my-eval (cadr (car defs)) env) env)
+			(change-env! (cdr defs) env)
+		)
+	)
+)
+
+(define (value_changer! key value env)
+	(if (eq? (car (car env)) key)
+		(set-car! (cdr (car env)) value)
+		(value_changer! key value (cdr env))
+	)
+)
+
 (define (handle-letrec defs body env)
-  (display "Error: letrec not implemented yet") 
-  (newline))
+  (let ((new-env (append env (uninit defs '()))))
+	(begin
+	  (change-env! defs new-env)
+	  (my-eval (car body) new-env)
+	)
+  )
+)
 
 
 (define (handle-call evald-exps)
