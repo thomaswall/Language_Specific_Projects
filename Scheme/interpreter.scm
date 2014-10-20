@@ -79,18 +79,40 @@
   (cond ((null? L) 0)
         (else (+ 1 (len (cdr L))))))
 
-(define (cond_recurse exp) ;; recurse through all conditionals until hit true or last
+(define (cond_recurse exp env) ;; recurse through all conditionals until hit true or last
 	(if (eq? (len exp) '2) 
-		(if (top-eval (car (car exp)))
-			(top-eval (cadr (car exp)))
-			(top-eval (cadr (cadr exp)))
+		(if (my-eval (car (car exp)) env)
+			(my-eval (cadr (car exp)) env)
+			(my-eval (cadr (cadr exp)) env) 
 		)
-		(if (top-eval (car (car exp)))
-			(top-eval (cadr (car exp)))
-			(cond_recurse (cdr exp))
+		(if (my-eval (car (car exp)) env)
+			(my-eval (cadr (car exp)) env)
+			(cond_recurse (cdr exp) env)
 		)
 	)
 )
+
+(define (begin_recurse exp env)
+	(cond
+	 ((null? (cdr exp)) (my-eval (car exp) env))
+	 (else (my-eval (car exp) env) (begin_recurse (cdr exp) env))
+	)
+)
+
+(define (let_recurse variables exp env)
+	(if (not (null? (cdr variables)))
+		(let_recurse (cdr variables) exp (append env (bind (list (car (car variables))) (list (my-eval (cadr (car variables)) *global-env*)))))
+		(my-eval (car exp) (append env (bind (list (car (car variables))) (list (my-eval (cadr (car variables)) *global-env*)))))
+	)
+)
+
+(define (let_recurse* variables exp env)
+	(if (not (null? (cdr variables)))
+		(let_recurse* (cdr variables) exp (append env (bind (list (car (car variables))) (list (my-eval (cadr (car variables)) env)))))
+		(my-eval (car exp) (append env (bind (list (car (car variables))) (list (my-eval (cadr (car variables)) env)))))
+	)
+)
+
 
 ;; still missing let, let*, letrec, the syntax for (define (f x) ...),
 ;; cond, begin (block).
@@ -102,9 +124,12 @@
    ((eq? (car exp) 'quote) (cadr exp))
    ((eq? (car exp) 'if)
     (handle-if (cadr exp) (caddr exp) (cadddr exp) env))
-   ((eq? (car exp) 'cond) (cond_recurse (cdr exp)))
+   ((eq? (car exp) 'cond) (cond_recurse (cdr exp) env))
+   ((eq? (car exp) 'begin) (begin_recurse (cdr exp) env))
    ((eq? (car exp) 'lambda)
     (list 'closure exp env))
+   ((eq? (car exp) 'let) (let_recurse (car (cdr exp)) (cdr (cdr exp)) env))
+   ((eq? (car exp) 'let*) (let_recurse* (car (cdr exp)) (cdr (cdr exp)) env))
    ((eq? (car exp) 'letrec)
     (handle-letrec (cadr exp) (cddr exp) env))  ;; see explanation below
    (else
