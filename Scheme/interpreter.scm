@@ -53,7 +53,7 @@
 	 (if
 	  (pair? (cadr exp))
 	  (begin 
-	  	(insert! (list (caadr exp) (my-eval (list 'lambda (cdr (cadr exp)) (caddr exp)) *global-env*)) *global-env*)
+	  	(insert! (list (caadr exp) (my-eval (list 'lambda (cdr (cadr exp)) (cons 'begin (cdr (cdr exp)))) *global-env*)) *global-env*)
 	  	(caadr exp))
 	  (begin
 	  	(insert! (list (cadr exp) (my-eval (caddr exp) *global-env*)) *global-env*)
@@ -215,12 +215,17 @@
     (else (display "Error: Calling non-function"))
     )))
 
-
 ;;-------------------- Here is the initial global environment --------
+
+(define (my-not exp)
+	(not exp)
+)
 
 (define *global-env*
   (list (list 'car (list 'primitive-function car))
 	(list 'cdr (list 'primitive-function cdr))
+	(list 'cadr (list 'primitive-function cadr)) ;; ok to use?
+	(list 'caddr (list 'primitive-function caddr))
 	(list 'set-car! (list 'primitive-function set-car!))
 	(list 'set-cdr! (list 'primitive-function set-cdr!))
 	(list 'cons (list 'primitive-function cons))
@@ -234,8 +239,14 @@
 	(list '<= (list 'primitive-function  <=))
 	(list '>= (list 'primitive-function >=))
 	(list 'eq? (list 'primitive-function eq?))
+	(list 'equal? (list 'primitive-function equal?))
+	(list 'not (list 'primitive-function my-not))
 	(list 'pair? (list 'primitive-function pair?))
 	(list 'symbol? (list 'primitive-function symbol?))
+	(list 'apply (list 'primitive-function my-apply))
+	(list 'append (list 'primitive-function my-append))
+	(list 'map (list 'primitive-function my-map))
+	(list 'assoc (list 'primitive-function my-assoc))
 	(list 'null? (list 'primitive-function null?))
 	(list 'read (list 'primitive-function read))
 	(list 'display (list 'primitive-function  display))
