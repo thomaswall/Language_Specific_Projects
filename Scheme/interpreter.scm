@@ -243,7 +243,7 @@
 	(list 'not (list 'primitive-function my-not))
 	(list 'pair? (list 'primitive-function pair?))
 	(list 'symbol? (list 'primitive-function symbol?))
-	(list 'apply (list 'primitive-function my-apply))
+	;;(list 'apply (list 'primitive-function my-apply))
 	(list 'append (list 'primitive-function my-append))
 	(list 'map (list 'primitive-function my-map))
 	(list 'assoc (list 'primitive-function my-assoc))

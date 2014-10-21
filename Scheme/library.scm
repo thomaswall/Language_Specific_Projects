@@ -18,5 +18,8 @@
 )
 
 (define (my-apply function args)
-
+	(if (eq? (car function) 'closure)
+		(handle-call (cons function args))
+		(apply (cadr function) args)
+	)
 )
