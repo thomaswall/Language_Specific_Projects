@@ -220,6 +220,7 @@
 	(list 'caddr (list 'primitive-function caddr))
 	(list 'caadr (list 'primitive-function caadr))
 	(list 'cddr (list 'primitive-function cddr))
+	(list 'cadddr (list 'primitive-function cadddr))
 	(list 'set-car! (list 'primitive-function set-car!))
 	(list 'set-cdr! (list 'primitive-function set-cdr!))
 	(list 'cons (list 'primitive-function cons))

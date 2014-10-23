@@ -12,7 +12,7 @@
 
 (define (assoc key key-values)
 	(if (eq? (car (car key-values)) key)
-		(cadr (car key-values))
+		(car key-values)
 		(assoc key (cdr key-values))
 	)
 )
