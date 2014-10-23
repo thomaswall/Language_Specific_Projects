@@ -79,7 +79,7 @@
   (cond ((null? L) 0)
         (else (+ 1 (len (cdr L))))))
 
-(define (cond_recurse exp env) ;; recurse through all conditionals until hit true or last
+(define (handle-cond exp env) ;; recurse through all conditionals until hit true or last
 	(if (eq? (len exp) '2) 
 		(if (my-eval (car (car exp)) env)
 			(my-eval (cadr (car exp)) env)
@@ -87,29 +87,27 @@
 		)
 		(if (my-eval (car (car exp)) env)
 			(my-eval (cadr (car exp)) env)
-			(cond_recurse (cdr exp) env)
+			(handle-cond (cdr exp) env)
 		)
 	)
 )
 
-(define (begin_recurse exp env)
+(define (handle-begin exp env)
 	(cond
 	 ((null? (cdr exp)) (my-eval (car exp) env))
-	 (else (my-eval (car exp) env) (begin_recurse (cdr exp) env))
+	 (else (my-eval (car exp) env) (handle-begin (cdr exp) env))
 	)
 )
 
-(define (let_recurse variables exp env)
-	(if (not (null? (cdr variables)))
-		(let_recurse (cdr variables) exp (append env (bind (list (car (car variables))) (list (my-eval (cadr (car variables)) *global-env*)))))
-		(my-eval (car exp) (append env (bind (list (car (car variables))) (list (my-eval (cadr (car variables)) *global-env*)))))
-	)
+(define (handle-let defs body env)
+	(let ((bindings (map (lambda (def) (list (car def) (my-eval (cadr def) env))) defs)))
+	(handle-block body (append bindings env)))
 )
 
-(define (let_recurse* variables exp env)
-	(if (not (null? (cdr variables)))
-		(let_recurse* (cdr variables) exp (append env (bind (list (car (car variables))) (list (my-eval (cadr (car variables)) env)))))
-		(my-eval (car exp) (append env (bind (list (car (car variables))) (list (my-eval (cadr (car variables)) env)))))
+(define (handle-let* defs body env)
+	(if (null? (cdr defs))
+		(handle-block body (cons(list (car (car defs)) (my-eval (cadr (car defs)) env)) env))
+		(handle-let* (cdr defs) body (cons (list (car (car defs)) (my-eval (cadr (car defs)) env)) env))
 	)
 )
 
@@ -124,12 +122,12 @@
    ((eq? (car exp) 'quote) (cadr exp))
    ((eq? (car exp) 'if)
     (handle-if (cadr exp) (caddr exp) (cadddr exp) env))
-   ((eq? (car exp) 'cond) (cond_recurse (cdr exp) env))
-   ((eq? (car exp) 'begin) (begin_recurse (cdr exp) env))
+   ((eq? (car exp) 'cond) (handle-cond (cdr exp) env))
+   ((eq? (car exp) 'begin) (handle-begin (cdr exp) env))
    ((eq? (car exp) 'lambda)
     (list 'closure exp env))
-   ((eq? (car exp) 'let) (let_recurse (car (cdr exp)) (cdr (cdr exp)) env))
-   ((eq? (car exp) 'let*) (let_recurse* (car (cdr exp)) (cdr (cdr exp)) env))
+   ((eq? (car exp) 'let) (handle-let (car (cdr exp)) (cdr (cdr exp)) env))
+   ((eq? (car exp) 'let*) (handle-let* (car (cdr exp)) (cdr (cdr exp)) env))
    ((eq? (car exp) 'letrec)
     (handle-letrec (cadr exp) (cddr exp) env))  ;; see explanation below
    (else
@@ -221,11 +219,20 @@
 	(not exp)
 )
 
+(define (my-apply function args)
+	(if (eq? (car function) 'closure)
+		(handle-call (cons function args))
+		(apply (cadr function) args)
+	)
+)
+
 (define *global-env*
   (list (list 'car (list 'primitive-function car))
 	(list 'cdr (list 'primitive-function cdr))
 	(list 'cadr (list 'primitive-function cadr)) ;; ok to use?
 	(list 'caddr (list 'primitive-function caddr))
+	(list 'caadr (list 'primitive-function caadr))
+	(list 'cddr (list 'primitive-function cddr))
 	(list 'set-car! (list 'primitive-function set-car!))
 	(list 'set-cdr! (list 'primitive-function set-cdr!))
 	(list 'cons (list 'primitive-function cons))
@@ -243,10 +250,7 @@
 	(list 'not (list 'primitive-function my-not))
 	(list 'pair? (list 'primitive-function pair?))
 	(list 'symbol? (list 'primitive-function symbol?))
-	;;(list 'apply (list 'primitive-function my-apply))
-	(list 'append (list 'primitive-function my-append))
-	(list 'map (list 'primitive-function my-map))
-	(list 'assoc (list 'primitive-function my-assoc))
+	(list 'apply (list 'primitive-function my-apply))
 	(list 'null? (list 'primitive-function null?))
 	(list 'read (list 'primitive-function read))
 	(list 'display (list 'primitive-function  display))
