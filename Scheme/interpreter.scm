@@ -7,7 +7,7 @@
   (display "--> ") 
   (let ((exp (read)))
     (cond ((equal? exp '(exit))      ; (exit) only allowed at top level
-	   'done)
+	   'exiting)
 	  (else  (display (top-eval exp))
 		 (newline)
 		 (repl))
@@ -75,29 +75,17 @@
       (my-eval then-exp env)
       (my-eval else-exp env)))
 
-(define (len L) ;; compute length of list
-  (cond ((null? L) 0)
-        (else (+ 1 (len (cdr L))))))
 
 (define (handle-cond exp env) ;; recurse through all conditionals until hit true or last
-	(if (eq? (len exp) '2) 
+	(if (null? (cdr exp)) 
+		(handle-block (cdr (car exp)) env) 
 		(if (my-eval (car (car exp)) env)
-			(my-eval (cadr (car exp)) env)
-			(my-eval (cadr (cadr exp)) env) 
-		)
-		(if (my-eval (car (car exp)) env)
-			(my-eval (cadr (car exp)) env)
+			(handle-block (cdr (car exp)) env)
 			(handle-cond (cdr exp) env)
 		)
 	)
 )
 
-(define (handle-begin exp env)
-	(cond
-	 ((null? (cdr exp)) (my-eval (car exp) env))
-	 (else (my-eval (car exp) env) (handle-begin (cdr exp) env))
-	)
-)
 
 (define (handle-let defs body env)
 	(let ((bindings (map (lambda (def) (list (car def) (my-eval (cadr def) env))) defs)))
@@ -123,7 +111,7 @@
    ((eq? (car exp) 'if)
     (handle-if (cadr exp) (caddr exp) (cadddr exp) env))
    ((eq? (car exp) 'cond) (handle-cond (cdr exp) env))
-   ((eq? (car exp) 'begin) (handle-begin (cdr exp) env))
+   ((eq? (car exp) 'begin) (handle-block (cdr exp) env))
    ((eq? (car exp) 'lambda)
     (list 'closure exp env))
    ((eq? (car exp) 'let) (handle-let (car (cdr exp)) (cdr (cdr exp)) env))
@@ -213,7 +201,6 @@
     (else (display "Error: Calling non-function"))
     )))
 
-;;-------------------- Here is the initial global environment --------
 
 (define (my-not exp)
 	(not exp)
@@ -254,6 +241,7 @@
 	(list 'null? (list 'primitive-function null?))
 	(list 'read (list 'primitive-function read))
 	(list 'display (list 'primitive-function  display))
+	(list 'newline (list 'primitive-function newline))
 	(list 'open-input-file (list 'primitive-function open-input-file))
 	(list 'close-input-port (list 'primitive-function close-input-port))
 	(list 'eof-object? (list 'primitive-function eof-object?))
