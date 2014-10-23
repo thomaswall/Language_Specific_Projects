@@ -16,3 +16,18 @@
 		(assoc key (cdr key-values))
 	)
 )
+
+(define (cadr L)
+	(car (cdr L)))
+
+(define (caddr L)
+	(car (cdr (cdr L))))
+
+(define (caadr L)
+	(car (car (cdr L))))
+
+(define (cddr L)
+	(cdr (cdr L)))
+
+(define (cadddr L)
+	(car (cdr (cdr (cdr L)))))

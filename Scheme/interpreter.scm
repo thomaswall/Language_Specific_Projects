@@ -7,7 +7,7 @@
   (display "--> ") 
   (let ((exp (read)))
     (cond ((equal? exp '(exit))      ; (exit) only allowed at top level
-	   'exiting)
+	   'done)
 	  (else  (display (top-eval exp))
 		 (newline)
 		 (repl))
@@ -181,7 +181,7 @@
   (let ((new-env (append env (uninit defs '()))))
 	(begin
 	  (change-env! defs new-env)
-	  (my-eval (car body) new-env)
+	  (handle-block body new-env)
 	)
   )
 )
@@ -216,11 +216,6 @@
 (define *global-env*
   (list (list 'car (list 'primitive-function car))
 	(list 'cdr (list 'primitive-function cdr))
-	(list 'cadr (list 'primitive-function cadr)) ;; ok to use?
-	(list 'caddr (list 'primitive-function caddr))
-	(list 'caadr (list 'primitive-function caadr))
-	(list 'cddr (list 'primitive-function cddr))
-	(list 'cadddr (list 'primitive-function cadddr))
 	(list 'set-car! (list 'primitive-function set-car!))
 	(list 'set-cdr! (list 'primitive-function set-cdr!))
 	(list 'cons (list 'primitive-function cons))
