@@ -1,12 +1,7 @@
-                            ;;;Mini-Scheme Interpreter
-
-
-;;; Your first task is to understand this. 
-
-(define (repl)     ;;; the read-eval-print loop.
+(define (repl)     
   (display "--> ") 
   (let ((exp (read)))
-    (cond ((equal? exp '(exit))      ; (exit) only allowed at top level
+    (cond ((equal? exp '(exit))      
 	   'done)
 	  (else  (display (top-eval exp))
 		 (newline)
@@ -14,7 +9,7 @@
 	  )))
 
 
-(define (my-load filename)       ;; don't want to redefine the Scheme LOAD
+(define (my-load filename)       
   (load-repl (open-input-file filename)))
 
 
@@ -27,25 +22,11 @@
 	  )))
 
 
-
-;; insert!, below, is a destructive update of a list L, inserting the
-;; parameter val onto the front of L (so that L is actually modified).
-;; insert! must only be used where absolutely necessary, e.g. when an
-;; environment must be destructively updated to allow for recursion
-;; (see the implementation of (define ...) below).
-
-;; As their names imply, set-car! and set-cdr! destructively modify 
-;; the car field and cdr field of a cons cell, respectively. They are
-;; built-in functions (see *global-env* below).
-
 (define (insert! val L)
   (set-cdr! L (cons (car L) (cdr L)))
   (set-car! L val)
   )
 
-
-;; (define ....) is only allowed at the top level and affects only the 
-;; global environment. Only the basic form of define is supported here.
 
 (define (top-eval exp)
   (cond ((not (pair? exp)) (my-eval exp *global-env*))
@@ -100,9 +81,6 @@
 )
 
 
-;; still missing let, let*, letrec, the syntax for (define (f x) ...),
-;; cond, begin (block).
-
 (define (my-eval exp env)
   (cond
    ((symbol? exp) (lookup exp env))
@@ -117,7 +95,7 @@
    ((eq? (car exp) 'let) (handle-let (car (cdr exp)) (cdr (cdr exp)) env))
    ((eq? (car exp) 'let*) (handle-let* (car (cdr exp)) (cdr (cdr exp)) env))
    ((eq? (car exp) 'letrec)
-    (handle-letrec (cadr exp) (cddr exp) env))  ;; see explanation below
+    (handle-letrec (cadr exp) (cddr exp) env)) 
    (else
     (handle-call (map (lambda (sub-exp) (my-eval sub-exp env)) exp)))
    ))
@@ -135,20 +113,6 @@
 	(else (my-eval (car block) env)
 	      (handle-block (cdr block) env))
 	))
-    
-
-; Here's how handle-letrec should implement LETREC
-; 0)() The parameters are the defs,(e.g. ((f exp1) (g exp2)), and the body,
-;    which is a list of expressions, e.g. ((display x) (f (g 1)))
-; 1) create an association list binding the new names introducted by
-;    the letrec to uninitialized values (e.g. the symbol '*uninitialized*).
-;    For example, if the new names are x and y, then create 
-;    ((x *uninitialized*) (y *uninitialized*))
-; 2) create a new-env by appending the above association list to env.
-; 3) eval the right hand side of each def using new-env
-; 4) destructively modify new-env to replace the unitialized value for each
-;    new name with its correspondinng value.
-; 5) evaluate the body of the letrec using new-env
 
 
 ;;(
@@ -202,10 +166,6 @@
     )))
 
 
-(define (my-not exp)
-	(not exp)
-)
-
 (define (my-apply function args)
 	(if (eq? (car function) 'closure)
 		(handle-call (cons function args))
@@ -229,8 +189,6 @@
 	(list '<= (list 'primitive-function  <=))
 	(list '>= (list 'primitive-function >=))
 	(list 'eq? (list 'primitive-function eq?))
-	(list 'equal? (list 'primitive-function equal?))
-	(list 'not (list 'primitive-function my-not))
 	(list 'pair? (list 'primitive-function pair?))
 	(list 'symbol? (list 'primitive-function symbol?))
 	(list 'apply (list 'primitive-function my-apply))
@@ -241,5 +199,5 @@
 	(list 'open-input-file (list 'primitive-function open-input-file))
 	(list 'close-input-port (list 'primitive-function close-input-port))
 	(list 'eof-object? (list 'primitive-function eof-object?))
-	(list 'load (list 'primitive-function my-load))  ;;defined above
+	(list 'load (list 'primitive-function my-load))
 	))
