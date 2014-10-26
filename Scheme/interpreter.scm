@@ -34,7 +34,7 @@
 	 (if
 	  (pair? (cadr exp))
 	  (begin 
-	  	(insert! (list (caadr exp) (my-eval (list 'lambda (cdr (cadr exp)) (cons 'begin (cdr (cdr exp)))) *global-env*)) *global-env*)
+	  	(insert! (list (caadr exp) (my-eval (cons 'lambda (cons (cdr (cadr exp)) (cdr (cdr exp)))) *global-env*)) *global-env*)
 	  	(caadr exp))
 	  (begin
 	  	(insert! (list (cadr exp) (my-eval (caddr exp) *global-env*)) *global-env*)
@@ -45,7 +45,7 @@
 
 
 (define (lookup var env)
-  (let ((item (assoc var env)))  ;; assoc returns #f if var not found in env
+  (let ((item (assoc var env))) 
     (cond ((not item) (display "Error: Undefined Symbol ")
 		      (display var) (newline))
 	  (else (cadr item))
